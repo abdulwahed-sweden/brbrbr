@@ -1,32 +1,54 @@
 import { useState, useRef } from 'react'
-import { FileText, Trash2, Sparkles, User, Bot, CheckCircle, AlertCircle } from 'lucide-react'
+import { FileText, Trash2, Sparkles, User, Bot, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 function App() {
   const [text, setText] = useState('')
   const [fileName, setFileName] = useState('')
   const [results, setResults] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
   const fileInputRef = useRef(null)
 
   const handleClear = () => {
     setText('')
     setFileName('')
     setResults(null)
+    setError(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
   }
 
-  const handleAnalyze = () => {
-    // Mock analysis - will be replaced with API call in Phase 5
-    // Simulating analysis delay
+  const handleAnalyze = async () => {
+    setLoading(true)
     setResults(null)
-    setTimeout(() => {
-      setResults({
-        humanPercentage: 78,
-        aiPercentage: 22,
-        verdict: 'Human Written'
+    setError(null)
+
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
       })
-    }, 500)
+
+      if (!response.ok) {
+        throw new Error('Analysis failed. Please try again.')
+      }
+
+      const data = await response.json()
+
+      setResults({
+        humanPercentage: data.human_percentage,
+        aiPercentage: data.ai_percentage,
+        verdict: data.verdict
+      })
+    } catch (err) {
+      setError(err.message || 'An error occurred during analysis')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleUploadClick = () => {
@@ -78,6 +100,7 @@ function App() {
               onChange={(e) => setText(e.target.value)}
               placeholder="Paste or type text here to analyze..."
               className="w-full h-64 p-4 border-2 border-gray-300 rounded-lg resize-none focus:outline-none focus:border-gray-500 transition-colors text-gray-900 placeholder-gray-400"
+              disabled={loading}
             />
           </div>
 
@@ -85,7 +108,8 @@ function App() {
           <div className="flex items-center justify-center gap-4">
             <button
               onClick={handleClear}
-              className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              disabled={loading}
+              className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title="Clear text"
             >
               <Trash2 className="w-5 h-5 text-accent" />
@@ -94,17 +118,27 @@ function App() {
 
             <button
               onClick={handleAnalyze}
-              disabled={!text.trim()}
+              disabled={!text.trim() || loading}
               className="flex items-center gap-2 px-8 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
               title="Analyze text"
             >
-              <Sparkles className="w-5 h-5 text-accent" />
-              Analyze
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 text-accent animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 text-accent" />
+                  Analyze
+                </>
+              )}
             </button>
 
             <button
               onClick={handleUploadClick}
-              className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              disabled={loading}
+              className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title="Upload file"
             >
               <FileText className="w-5 h-5 text-accent" />
@@ -120,6 +154,16 @@ function App() {
             onChange={handleFileUpload}
             className="hidden"
           />
+
+          {/* Error Message */}
+          {error && (
+            <div className="mt-8 animate-fadeIn">
+              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                <p className="text-red-800">{error}</p>
+              </div>
+            </div>
+          )}
 
           {/* Results Section */}
           {results && (
