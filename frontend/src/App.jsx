@@ -1,22 +1,32 @@
 import { useState, useRef } from 'react'
-import { FileText, Trash2, Sparkles } from 'lucide-react'
+import { FileText, Trash2, Sparkles, User, Bot, CheckCircle, AlertCircle } from 'lucide-react'
 
 function App() {
   const [text, setText] = useState('')
   const [fileName, setFileName] = useState('')
+  const [results, setResults] = useState(null)
   const fileInputRef = useRef(null)
 
   const handleClear = () => {
     setText('')
     setFileName('')
+    setResults(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
   }
 
   const handleAnalyze = () => {
-    // Will be implemented in later phases
-    console.log('Analyzing text:', text)
+    // Mock analysis - will be replaced with API call in Phase 5
+    // Simulating analysis delay
+    setResults(null)
+    setTimeout(() => {
+      setResults({
+        humanPercentage: 78,
+        aiPercentage: 22,
+        verdict: 'Human Written'
+      })
+    }, 500)
   }
 
   const handleUploadClick = () => {
@@ -110,6 +120,74 @@ function App() {
             onChange={handleFileUpload}
             className="hidden"
           />
+
+          {/* Results Section */}
+          {results && (
+            <div className="mt-8 animate-fadeIn">
+              <div className="bg-gray-50 rounded-xl p-8 border-2 border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+                  Analysis Results
+                </h2>
+
+                {/* Percentage Bars */}
+                <div className="space-y-6 mb-8">
+                  {/* Human Percentage */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <User className="w-5 h-5 text-accent" />
+                        <span className="font-semibold text-gray-900">Human</span>
+                      </div>
+                      <span className="text-2xl font-bold text-gray-900">
+                        {results.humanPercentage}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                      <div
+                        className="bg-gray-900 h-full rounded-full transition-all duration-1000 ease-out"
+                        style={{ width: `${results.humanPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* AI Percentage */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bot className="w-5 h-5 text-accent" />
+                        <span className="font-semibold text-gray-900">AI</span>
+                      </div>
+                      <span className="text-2xl font-bold text-gray-900">
+                        {results.aiPercentage}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                      <div
+                        className="bg-gray-400 h-full rounded-full transition-all duration-1000 ease-out"
+                        style={{ width: `${results.aiPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Verdict Badge */}
+                <div className="flex items-center justify-center">
+                  <div className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold ${
+                    results.verdict === 'Human Written'
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-300 text-gray-900'
+                  }`}>
+                    {results.verdict === 'Human Written' ? (
+                      <CheckCircle className="w-5 h-5 text-accent" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-accent" />
+                    )}
+                    <span>{results.verdict}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
