@@ -1,6 +1,8 @@
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use actix_cors::Cors;
+use actix_files::{Files, NamedFile};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 #[derive(Deserialize)]
 struct AnalyzeRequest {
@@ -32,6 +34,11 @@ async fn analyze_text(req: web::Json<AnalyzeRequest>) -> impl Responder {
     HttpResponse::Ok().json(response)
 }
 
+async fn index() -> actix_web::Result<NamedFile> {
+    let path: PathBuf = "./static/index.html".parse().unwrap();
+    Ok(NamedFile::open(path)?)
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("🚀 Starting brbrbr server on http://localhost:8080");
@@ -46,6 +53,9 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .route("/health", web::get().to(health_check))
             .route("/api/analyze", web::post().to(analyze_text))
+            .service(Files::new("/assets", "./static/assets"))
+            .route("/", web::get().to(index))
+            .default_service(web::get().to(index))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
