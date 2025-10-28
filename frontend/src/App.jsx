@@ -1,16 +1,46 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { FileText, Trash2, Sparkles } from 'lucide-react'
 
 function App() {
   const [text, setText] = useState('')
+  const [fileName, setFileName] = useState('')
+  const fileInputRef = useRef(null)
 
   const handleClear = () => {
     setText('')
+    setFileName('')
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   const handleAnalyze = () => {
     // Will be implemented in later phases
     console.log('Analyzing text:', text)
+  }
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setFileName(file.name)
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const content = e.target?.result
+      if (typeof content === 'string') {
+        setText(content)
+      }
+    }
+    reader.onerror = () => {
+      console.error('Error reading file')
+      setFileName('')
+    }
+    reader.readAsText(file)
   }
 
   return (
@@ -27,6 +57,12 @@ function App() {
         <div className="max-w-3xl mx-auto space-y-6">
           {/* Text Input Area */}
           <div className="space-y-4">
+            {fileName && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-lg">
+                <FileText className="w-4 h-4 text-accent" />
+                <span>{fileName}</span>
+              </div>
+            )}
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -57,6 +93,7 @@ function App() {
             </button>
 
             <button
+              onClick={handleUploadClick}
               className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
               title="Upload file"
             >
@@ -64,6 +101,15 @@ function App() {
               Upload
             </button>
           </div>
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".txt,.md,.csv,.json"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
         </div>
       </main>
 
