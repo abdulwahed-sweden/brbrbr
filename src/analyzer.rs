@@ -156,7 +156,7 @@ impl TextAnalyzer {
         }
 
         let exclamation_count = text.matches('!').count() as f32;
-        let question_count = text.matches('?').count() as f32;
+        let _question_count = text.matches('?').count() as f32;
         let comma_count = text.matches(',').count() as f32;
 
         let exclamation_ratio = exclamation_count / total_chars * 100.0;
