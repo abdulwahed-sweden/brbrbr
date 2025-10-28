@@ -1,19 +1,37 @@
 /// AI Text Detection Module
 ///
-/// This module implements a heuristic-based approach to detect AI-generated text.
-/// It analyzes various patterns common in AI-generated content vs human writing.
+/// This module uses Hugging Face's AI detection models for accurate AI text detection.
+/// Falls back to heuristic-based approach if the API is unavailable.
 
 use std::collections::HashSet;
+use crate::huggingface;
 
 pub struct TextAnalyzer;
 
 impl TextAnalyzer {
     /// Analyze text and return AI probability score (0-100)
-    pub fn analyze(text: &str) -> f32 {
+    /// Uses Hugging Face API with fallback to heuristics
+    pub async fn analyze(text: &str) -> f32 {
         if text.trim().is_empty() {
             return 50.0;
         }
 
+        // Try Hugging Face API first
+        match huggingface::analyze_with_huggingface(text).await {
+            Ok(score) => {
+                println!("✓ HF API detection: {:.2}% AI", score);
+                score
+            }
+            Err(e) => {
+                eprintln!("⚠ HF API failed: {}, falling back to heuristics", e);
+                // Fallback to heuristic-based analysis
+                Self::analyze_heuristic(text)
+            }
+        }
+    }
+
+    /// Heuristic-based analysis (fallback method)
+    fn analyze_heuristic(text: &str) -> f32 {
         let mut ai_score = 0.0;
         let mut total_weight = 0.0;
 

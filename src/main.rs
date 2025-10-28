@@ -1,4 +1,5 @@
 mod analyzer;
+mod huggingface;
 
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use actix_cors::Cors;
@@ -30,7 +31,7 @@ async fn analyze_text(req: web::Json<AnalyzeRequest>) -> impl Responder {
     let text = &req.text;
 
     // Perform AI detection analysis
-    let ai_percentage = TextAnalyzer::analyze(text);
+    let ai_percentage = TextAnalyzer::analyze(text).await;
     let human_percentage = 100.0 - ai_percentage;
     let verdict = TextAnalyzer::get_verdict(ai_percentage);
 
@@ -50,6 +51,9 @@ async fn index() -> actix_web::Result<NamedFile> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // Load environment variables from .env file
+    dotenv::dotenv().ok();
+
     println!("🚀 Starting brbrbr server on http://localhost:8080");
 
     HttpServer::new(|| {
