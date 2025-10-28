@@ -1,8 +1,11 @@
+mod analyzer;
+
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use actix_cors::Cors;
 use actix_files::{Files, NamedFile};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use analyzer::TextAnalyzer;
 
 #[derive(Deserialize)]
 struct AnalyzeRequest {
@@ -24,11 +27,17 @@ async fn health_check() -> impl Responder {
 }
 
 async fn analyze_text(req: web::Json<AnalyzeRequest>) -> impl Responder {
-    // Dummy response: 50/50 for now
+    let text = &req.text;
+
+    // Perform AI detection analysis
+    let ai_percentage = TextAnalyzer::analyze(text);
+    let human_percentage = 100.0 - ai_percentage;
+    let verdict = TextAnalyzer::get_verdict(ai_percentage);
+
     let response = AnalyzeResponse {
-        human_percentage: 50.0,
-        ai_percentage: 50.0,
-        verdict: "Uncertain".to_string(),
+        human_percentage,
+        ai_percentage,
+        verdict,
     };
 
     HttpResponse::Ok().json(response)
